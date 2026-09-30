@@ -7,6 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -24,11 +25,11 @@ else
     ScreenGui.Parent = CoreGui
 end
 
--- Ultra Mini Main Window (210x135)
+-- Ultra Mini Main Window (210x150)
 local Main = Instance.new("Frame", ScreenGui)
 Main.Name = "Main"
-Main.Size = UDim2.new(0, 210, 0, 135)
-Main.Position = UDim2.new(0.5, -105, 0.5, -67)
+Main.Size = UDim2.new(0, 210, 0, 150)
+Main.Position = UDim2.new(0.5, -105, 0.5, -75)
 Main.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
@@ -161,7 +162,7 @@ local function ToggleUI()
         end)
     else
         Main.Visible = true
-        local tweenSize = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 210, 0, 135)})
+        local tweenSize = TweenService:Create(Main, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 210, 0, 150)})
         tweenSize:Play()
         tweenSize.Completed:Connect(function()
             open = true
@@ -446,7 +447,50 @@ SkinBtn.Size = UDim2.new(1, 0, 1, 0)
 SkinBtn.BackgroundTransparency = 1
 SkinBtn.Text = ""
 
--- 6. Auto Escape Button
+-- 6. Won Farm (Arcade Auto Farm) Toggle
+local ArcadeFrame = Instance.new("Frame", ScrollContainer)
+ArcadeFrame.Size = UDim2.new(1, -6, 0, 30)
+ArcadeFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+
+local ArcadeCorner = Instance.new("UICorner", ArcadeFrame)
+ArcadeCorner.CornerRadius = UDim.new(0, 6)
+
+local ArcadeStroke = Instance.new("UIStroke", ArcadeFrame)
+ArcadeStroke.Color = Color3.fromRGB(38, 38, 38)
+ArcadeStroke.Thickness = 1
+
+local ArcadeLabel = Instance.new("TextLabel", ArcadeFrame)
+ArcadeLabel.Size = UDim2.new(1, -45, 1, 0)
+ArcadeLabel.Position = UDim2.new(0, 8, 0, 0)
+ArcadeLabel.BackgroundTransparency = 1
+ArcadeLabel.Text = "Won Farm"
+ArcadeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+ArcadeLabel.TextSize = 10
+ArcadeLabel.Font = Enum.Font.GothamMedium
+ArcadeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local ArcadeSwitchBG = Instance.new("Frame", ArcadeFrame)
+ArcadeSwitchBG.Size = UDim2.new(0, 28, 0, 14)
+ArcadeSwitchBG.Position = UDim2.new(1, -34, 0.5, -7)
+ArcadeSwitchBG.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+
+local ArcadeSwitchCorner = Instance.new("UICorner", ArcadeSwitchBG)
+ArcadeSwitchCorner.CornerRadius = UDim.new(1, 0)
+
+local ArcadeSwitchCircle = Instance.new("Frame", ArcadeSwitchBG)
+ArcadeSwitchCircle.Size = UDim2.new(0, 10, 0, 10)
+ArcadeSwitchCircle.Position = UDim2.new(0, 2, 0.5, -5)
+ArcadeSwitchCircle.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+
+local ArcadeCircleCorner = Instance.new("UICorner", ArcadeSwitchCircle)
+ArcadeCircleCorner.CornerRadius = UDim.new(1, 0)
+
+local ArcadeBtn = Instance.new("TextButton", ArcadeFrame)
+ArcadeBtn.Size = UDim2.new(1, 0, 1, 0)
+ArcadeBtn.BackgroundTransparency = 1
+ArcadeBtn.Text = ""
+
+-- 7. Auto Escape Button
 local EscapeFrame = Instance.new("Frame", ScrollContainer)
 EscapeFrame.Size = UDim2.new(1, -6, 0, 30)
 EscapeFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -693,7 +737,7 @@ end)
 
 -- 5. Uniform Skin Logic
 local SetUniformSkinEnabled = false
-local UniformColorValue = Color3.fromRGB(255, 0, 0) -- Defolt olaraq qırmızı
+local UniformColorValue = Color3.fromRGB(255, 0, 0)
 
 local function set_uniform_color(color)
     UniformColorValue = color
@@ -725,7 +769,171 @@ SkinBtn.MouseButton1Click:Connect(function()
     toggle_uniform_skin(SetUniformSkinEnabled)
 end)
 
--- 6. Advanced Auto Escape Logic
+-- 6. Won Farm (Arcade Auto Farm) Logic
+local ArcadeAutoFarmEnabled = false
+local ArcadeAutoFarmTask = nil
+local ArcadeCurrentGame = nil
+local ArcadeConsoleCache = nil
+local ArcadeGameModule = nil
+
+local function fn7()
+    if ArcadeConsoleCache and ArcadeConsoleCache.Parent then
+        return ArcadeConsoleCache
+    end
+    ArcadeConsoleCache = nil
+
+    local candidates = {
+        Workspace:FindFirstChild("Arcade"),
+        Workspace:FindFirstChild("Arcades"),
+        Workspace:FindFirstChild("Map"),
+        Workspace:FindFirstChild("Interactive"),
+        Workspace:FindFirstChild("Objects"),
+    }
+
+    for _, folder in ipairs(candidates) do
+        if folder then
+            local found = folder:FindFirstChild("Screen", true)
+            if found and found.Parent then
+                local parent = found.Parent
+                if parent:FindFirstChild("SurfaceGui") or found:FindFirstChild("SurfaceGui") then
+                    ArcadeConsoleCache = parent
+                    return parent
+                end
+            end
+        end
+    end
+
+    for _, desc in ipairs(Workspace:GetChildren()) do
+        if desc:IsA("Model") or desc:IsA("Folder") then
+            local screen = desc:FindFirstChild("Screen", true)
+            if screen and screen:FindFirstChild("SurfaceGui") then
+                ArcadeConsoleCache = screen.Parent
+                return ArcadeConsoleCache
+            end
+        end
+    end
+
+    return nil
+end
+
+local function fn8()
+    if not ArcadeGameModule then
+        local ok, result = pcall(function()
+            return require(ReplicatedStorage.Modules.PlayableArcadeGame)
+        end)
+        if not ok or not result then return end
+        ArcadeGameModule = result
+    end
+
+    local console = fn7()
+    if not console then return end
+
+    local character = LocalPlayer.Character
+    if not character then return end
+
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    if ArcadeCurrentGame then
+        pcall(function()
+            ArcadeCurrentGame.Stopping = true
+            ArcadeCurrentGame:Destroy()
+        end)
+        ArcadeCurrentGame = nil
+    end
+
+    local v3 = ArcadeGameModule.new(console, hrp)
+    ArcadeCurrentGame = v3
+    v3:start()
+
+    local now = os.clock()
+    while v3.State ~= "Running" and os.clock() - now < 3 do
+        if not ArcadeAutoFarmEnabled then
+            pcall(function() v3:Destroy() end)
+            ArcadeCurrentGame = nil
+            return
+        end
+        task.wait(0.1)
+    end
+
+    if not ArcadeAutoFarmEnabled then
+        pcall(function() v3:Destroy() end)
+        ArcadeCurrentGame = nil
+        return
+    end
+
+    if v3.State ~= "Running" then
+        pcall(function() v3:Destroy() end)
+        ArcadeCurrentGame = nil
+        return
+    end
+
+    v3.Score = 4499
+    if v3.ScoreLabel then
+        v3.ScoreLabel.Text = "Score: 4499"
+    end
+
+    table.clear(v3.CalculateScore)
+    for i = 1, 99 do
+        table.insert(v3.CalculateScore, "Coin")
+    end
+
+    v3:win("You Won! Congrats! :D")
+end
+
+local function toggle_arcade_auto_farm(arg)
+    local enabled = arg and true or false
+    ArcadeAutoFarmEnabled = enabled
+
+    if ArcadeAutoFarmTask then
+        pcall(function() task.cancel(ArcadeAutoFarmTask) end)
+        ArcadeAutoFarmTask = nil
+    end
+
+    if not enabled then
+        if ArcadeCurrentGame then
+            pcall(function()
+                ArcadeCurrentGame.Stopping = true
+                ArcadeCurrentGame:Destroy()
+            end)
+            ArcadeCurrentGame = nil
+        end
+        ArcadeConsoleCache = nil
+        PlayToggleSound()
+        return true
+    end
+
+    ArcadeAutoFarmTask = task.spawn(function()
+        while ArcadeAutoFarmEnabled do
+            pcall(fn8)
+            if ArcadeAutoFarmEnabled then
+                task.wait(2)
+                continue
+            end
+            break
+        end
+        ArcadeAutoFarmTask = nil
+    end)
+
+    PlayToggleSound()
+    return true
+end
+
+ArcadeBtn.MouseButton1Click:Connect(function()
+    ArcadeAutoFarmEnabled = not ArcadeAutoFarmEnabled
+    
+    if ArcadeAutoFarmEnabled then
+        TweenService:Create(ArcadeSwitchBG, TweenInfo.new(0.2), {BackgroundColor3 = CyanColor}):Play()
+        TweenService:Create(ArcadeSwitchCircle, TweenInfo.new(0.2), {Position = UDim2.new(1, -12, 0.5, -5), BackgroundColor3 = Color3.fromRGB(0, 0, 0)}):Play()
+    else
+        TweenService:Create(ArcadeSwitchBG, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+        TweenService:Create(ArcadeSwitchCircle, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -5), BackgroundColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+    end
+    
+    toggle_arcade_auto_farm(ArcadeAutoFarmEnabled)
+end)
+
+-- 7. Advanced Auto Escape Logic
 EscapeBtn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if not char then return end
